@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Welcome, {{ session.username }}!</h2>
+        <p class="subtitle">Your Job Search Dashboard</p>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>Total Applications</h3>
+            <p class="stat-number">{{ applications|length }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Active Applications</h3>
+            <p class="stat-number">{{ applications|selectattr('status', 'in', ['pending', 'shortlisted', 'interviewing'])|list|length }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Interviews Scheduled</h3>
+            <p class="stat-number">{{ applications|selectattr('status', 'equalto', 'interviewing')|list|length }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="section">
+            <h3>Available Jobs</h3>
+            <div class="jobs-grid">
+                {% for job in available_jobs %}
+                <div class="job-card">
+                    <div class="job-header">
+                        <h4>{{ job.title }}</h4>
+                        <span class="company">{{ job.company }}</span>
+                    </div>
+                    <div class="job-details">
+                        <p><i class="fas fa-map-marker-alt"></i> {{ job.location }}</p>
+                        <p><i class="fas fa-briefcase"></i> {{ job.employment_type }}</p>
+                        <p><i class="fas fa-money-bill-wave"></i> {{ job.salary }}</p>
+                        <p><i class="fas fa-chart-line"></i> {{ job.experience_level }}</p>
+                    </div>
+                    <div class="job-description">
+                        {{ job.description[:200] }}...
+                    </div>
+                    <div class="job-requirements">
+                        <h5>Requirements:</h5>
+                        <p>{{ job.requirements[:150] }}...</p>
+                    </div>
+                    <div class="job-footer">
+                        <small>Posted on {{ job.created_at }}</small>
+                        <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn btn-primary">Apply Now</a>
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-data">No jobs available at the moment.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Your Applications</h3>
+            <div class="applications-list">
+                {% for application in applications %}
+                <div class="application-card">
+                    <div class="application-header">
+                        <h4>{{ application.job_title }}</h4>
+                        <span class="company">{{ application.company }}</span>
+                        <span class="status-badge status-{{ application.status }}">{{ application.status|title }}</span>
+                    </div>
+                    <div class="application-details">
+                        <p><i class="fas fa-calendar"></i> Applied on: {{ application.applied_date }}</p>
+                        <p><i class="fas fa-flask"></i> AI Score: {{ application.ai_score }}%</p>
+                        {% if application.interview_schedule %}
+                        <div class="interview-info">
+                            <h5>Interview Details:</h5>
+                            <p><i class="fas fa-clock"></i> Date: {{ application.interview_schedule.date }}</p>
+                            <p><i class="fas fa-user-tie"></i> Interviewer: {{ application.interview_schedule.interviewer }}</p>
+                            <p><i class="fas fa-video"></i> Type: {{ application.interview_schedule.type|title }}</p>
+                        </div>
+                        {% endif %}
+                        {% if application.feedback %}
+                        <div class="feedback-section">
+                            <h5>Interview Feedback:</h5>
+                            {% for feedback in application.feedback %}
+                            <div class="feedback-item">
+                                <p><strong>Round {{ feedback.round }}:</strong> {{ feedback.feedback }}</p>
+                                <small>Score: {{ feedback.score }}/10 | By: {{ feedback.interviewer }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-data">You haven't applied to any jobs yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h2 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-card h3 {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #3498db;
+}
+
+.section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.section h3 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.job-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.job-header {
+    margin-bottom: 1rem;
+}
+
+.job-header h4 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.company {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.job-details {
+    margin-bottom: 1rem;
+}
+
+.job-details p {
+    margin: 0.5rem 0;
+    color: #34495e;
+}
+
+.job-description {
+    margin-bottom: 1rem;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.job-requirements {
+    margin-bottom: 1rem;
+}
+
+.job-requirements h5 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.job-requirements p {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.job-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.applications-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.application-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.application-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.status-pending { background: #f1c40f; color: #fff; }
+.status-shortlisted { background: #3498db; color: #fff; }
+.status-interviewing { background: #9b59b6; color: #fff; }
+.status-accepted { background: #2ecc71; color: #fff; }
+.status-rejected { background: #e74c3c; color: #fff; }
+
+.interview-info, .feedback-section {
+    background: white;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+}
+
+.feedback-item {
+    border-left: 3px solid #3498db;
+    padding-left: 1rem;
+    margin: 0.5rem 0;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.no-data {
+    text-align: center;
+    color: #7f8c8d;
+}
+</style>
+{% endblock %} 

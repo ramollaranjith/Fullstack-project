@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>Manage Job Postings</h2>
+    <a href="{{ url_for('post_job') }}" class="btn">Add New Job</a>
+    
+    <div class="jobs-list">
+        {% for job in jobs %}
+            <div class="job-card admin-job">
+                <h3 class="job-title">{{ job.title }}</h3>
+                <div class="job-meta">
+                    <span class="job-company">{{ job.company }}</span> • 
+                    <span class="job-location">{{ job.location }}</span>
+                </div>
+                <div class="job-salary">
+                    Salary: {{ job.salary }}
+                </div>
+                <div class="job-description">
+                    {{ job.description }}
+                </div>
+                <div class="job-requirements">
+                    <strong>Requirements:</strong><br>
+                    {{ job.requirements }}
+                </div>
+                <div class="job-footer">
+                    <small>Posted on {{ job.created_at }}</small>
+                    <a href="{{ url_for('delete_job', job_id=job.id) }}" 
+                       class="btn btn-danger"
+                       onclick="return confirm('Are you sure you want to delete this job?')">
+                        Delete
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

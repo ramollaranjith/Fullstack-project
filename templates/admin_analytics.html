@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Admin Analytics Dashboard</h2>
+    
+    <!-- Overview Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Jobs</h5>
+                    <p class="card-text display-4">{{ analytics.total_jobs }}</p>
+                    <p class="text-success">Active Jobs: {{ analytics.active_jobs }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Applications</h5>
+                    <p class="card-text display-4">{{ analytics.total_applications }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Users</h5>
+                    <p class="card-text">Total Users: {{ analytics.total_users }}</p>
+                    <p class="text-primary">Recruiters: {{ analytics.recruiters }}</p>
+                    <p class="text-info">Candidates: {{ analytics.candidates }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Job Postings</h5>
+                    <div class="list-group">
+                        {% for job in recent_jobs %}
+                        <div class="list-group-item">
+                            <h6 class="mb-1">{{ job.title }}</h6>
+                            <p class="mb-1">{{ job.company }}</p>
+                            <small>Posted by: {{ job.posted_by }} on {{ job.created_at }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Applications</h5>
+                    <div class="list-group">
+                        {% for application in recent_applications %}
+                        <div class="list-group-item">
+                            <h6 class="mb-1">{{ application.user_name }}</h6>
+                            <p class="mb-1">Applied for: Job #{{ application.job_id }}</p>
+                            <small>Status: {{ application.status }} | Applied on: {{ application.applied_at }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

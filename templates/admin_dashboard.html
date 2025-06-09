@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Admin Dashboard</h2>
+        <p class="subtitle">Platform Overview and Management</p>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Users</h3>
+            <div class="stat-content">
+                <p class="stat-number">{{ analytics.total_users }}</p>
+                <div class="stat-breakdown">
+                    <span>Job Seekers: {{ analytics.candidates }}</span>
+                    <span>Recruiters: {{ analytics.recruiters }}</span>
+                    <span>Admins: {{ analytics.admins }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Jobs</h3>
+            <div class="stat-content">
+                <p class="stat-number">{{ analytics.total_jobs }}</p>
+                <div class="stat-breakdown">
+                    <span>Active: {{ analytics.active_jobs }}</span>
+                    <span>Posted by Recruiters: {{ analytics.jobs_posted_by_recruiters }}</span>
+                    <span>Closed: {{ analytics.total_jobs - analytics.active_jobs }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Applications</h3>
+            <div class="stat-content">
+                <p class="stat-number">{{ analytics.total_applications }}</p>
+                <div class="stat-breakdown">
+                    <span>Pending: {{ analytics.pending_applications }}</span>
+                    <span>Shortlisted: {{ analytics.shortlisted_applications }}</span>
+                    <span>Interviewing: {{ analytics.interviewing_applications }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Application Status Breakdown</h3>
+            <div class="stat-content">
+                <div class="stat-breakdown">
+                    <span>Accepted: {{ analytics.accepted_applications }}</span>
+                    <span>Rejected: {{ analytics.rejected_applications }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="dashboard-content">
+        <!-- Recent Activities -->
+        <div class="section">
+            <h3>Recent Activities</h3>
+            <div class="activities-grid">
+                <div class="activity-card">
+                    <h4>Latest Job Postings</h4>
+                    <div class="activity-list">
+                        {% for job in recent_jobs %}
+                        <div class="activity-item">
+                            <div class="activity-header">
+                                <h5>{{ job.title }}</h5>
+                                <span class="company">{{ job.company }}</span>
+                            </div>
+                            <div class="activity-details">
+                                <p>Posted by: {{ job.posted_by }}</p>
+                                <p>Applications: {{ job.total_applications }}</p>
+                                <small>Posted on: {{ job.created_at }}</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="no-data">No recent jobs posted.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="activity-card">
+                    <h4>Recent Applications</h4>
+                    <div class="activity-list">
+                        {% for application in recent_applications %}
+                        <div class="activity-item">
+                            <div class="activity-header">
+                                <h5>{{ application.user_name }}</h5>
+                                <span class="status-badge status-{{ application.status }}">
+                                    {{ application.status|title }}
+                                </span>
+                            </div>
+                            <div class="activity-details">
+                                <p>Applied for: {{ application.job_title }}</p>
+                                <p>Email: {{ application.user_email }}</p>
+                                {% if application.resume_url %}
+                                <p>Resume: <a href="{{ application.resume_url }}" target="_blank">View Resume</a></p>
+                                {% else %}
+                                <p>Resume: Not available</p>
+                                {% endif %}
+                                <p>AI Score: {{ application.ai_score }}%</p>
+                                <small>Applied on: {{ application.applied_at }}</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="no-data">No recent applications.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="section">
+            <h3>User Management</h3>
+            <div class="user-filters">
+                <button class="filter-btn active" data-filter="all">All Users</button>
+                <button class="filter-btn" data-filter="candidates">Job Seekers</button>
+                <button class="filter-btn" data-filter="recruiters">Recruiters</button>
+                <button class="filter-btn" data-filter="admins">Admins</button>
+            </div>
+            <div class="users-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="user-row" data-role="{% if user.is_admin %}admins{% elif user.is_employer %}recruiters{% else %}candidates{% endif %}">
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                    Administrator
+                                {% elif user.is_employer %}
+                                    Recruiter
+                                {% else %}
+                                    Job Seeker
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at }}</td>
+                            <td>{{ user.last_login }}</td>
+                            <td>
+                                <span class="status-badge status-active">Active</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-small" onclick="viewUserDetails({{ user.id|tojson }})">View Details</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Job Management -->
+        <div class="section">
+            <h3>Job Management</h3>
+            <div class="jobs-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Company</th>
+                            <th>Posted By</th>
+                            <th>Applications</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td>{{ job.title }}</td>
+                            <td>{{ job.company }}</td>
+                            <td>{{ job.posted_by }}</td>
+                            <td>{{ job.total_applications }}</td>
+                            <td>
+                                <span class="status-badge status-{{ job.status }}">
+                                    {{ job.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('edit_job', job_id=job.id) }}" class="btn btn-small">Edit</a>
+                                    <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-small">View Applications</a>
+                                    <button class="btn btn-small btn-danger" onclick="deleteJob({{ job.id|tojson }})">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h2 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.stat-content {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #3498db;
+    margin-bottom: 0.5rem;
+}
+
+.stat-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.section h3 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.activity-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.activity-header h5 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+.company {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.activity-details p {
+    margin: 0.5rem 0;
+    color: #34495e;
+    font-size: 0.9rem;
+}
+
+.activity-details a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.activity-details a:hover {
+    text-decoration: underline;
+}
+
+.activity-details small {
+    color: #7f8c8d;
+    font-size: 0.8rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-pending { background: #f1c40f; color: #fff; }
+.status-shortlisted { background: #3498db; color: #fff; }
+.status-interviewing { background: #9b59b6; color: #fff; }
+.status-accepted { background: #2ecc71; color: #fff; }
+.status-rejected { background: #e74c3c; color: #fff; }
+
+.user-filters {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    background: #e9ecef;
+}
+
+.filter-btn.active {
+    background: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.users-table, .jobs-table {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #f2f2f2;
+    font-weight: bold;
+    color: #555;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-small {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.no-data {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 1rem;
+}
+</style>
+
+<script>
+function viewUserDetails(userId) {
+    alert('View details for user ID: ' + userId); // Replace with modal or new page later
+}
+
+function deleteJob(jobId) {
+    if (confirm('Are you sure you want to delete this job?')) {
+        window.location.href = '{{ url_for('delete_job', job_id=0) }}'.replace('0', jobId.toString());
+    }
+}
+
+// User filtering script
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.user-filters .filter-btn');
+    const userRows = document.querySelectorAll('.users-table .user-row');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+
+            // Update active button class
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            // Filter user rows
+            userRows.forEach(row => {
+                const role = row.getAttribute('data-role');
+                if (filter === 'all' || filter === role) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

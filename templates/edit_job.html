@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Edit Job Posting</h2>
+    <form method="POST" class="job-form">
+        <div class="form-group">
+            <label for="title">Job Title*</label>
+            <input type="text" id="title" name="title" value="{{ job.title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="company">Company Name*</label>
+            <input type="text" id="company" name="company" value="{{ job.company }}" required>
+        </div>
+        <div class="form-group">
+            <label for="location">Location*</label>
+            <input type="text" id="location" name="location" value="{{ job.location }}" required>
+        </div>
+        <div class="form-group">
+            <label for="employment_type">Employment Type*</label>
+            <select id="employment_type" name="employment_type" required>
+                <option value="Full-time" {% if job.employment_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                <option value="Part-time" {% if job.employment_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                <option value="Contract" {% if job.employment_type == 'Contract' %}selected{% endif %}>Contract</option>
+                <option value="Internship" {% if job.employment_type == 'Internship' %}selected{% endif %}>Internship</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="experience_level">Experience Level*</label>
+            <select id="experience_level" name="experience_level" required>
+                <option value="Entry Level" {% if job.experience_level == 'Entry Level' %}selected{% endif %}>Entry Level</option>
+                <option value="Mid Level" {% if job.experience_level == 'Mid Level' %}selected{% endif %}>Mid Level</option>
+                <option value="Senior Level" {% if job.experience_level == 'Senior Level' %}selected{% endif %}>Senior Level</option>
+                <option value="Executive" {% if job.experience_level == 'Executive' %}selected{% endif %}>Executive</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="salary">Salary Range*</label>
+            <input type="text" id="salary" name="salary" value="{{ job.salary }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Job Description*</label>
+            <textarea id="description" name="description" rows="5" required>{{ job.description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="requirements">Requirements*</label>
+            <textarea id="requirements" name="requirements" rows="5" required>{{ job.requirements }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="status">Status*</label>
+            <select id="status" name="status" required>
+                <option value="active" {% if job.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="closed" {% if job.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn">Update Job</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="applications-header">
+        <h2>Applications for {{ job.title }}</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="job-summary">
+        <h3>Job Details</h3>
+        <p><strong>Company:</strong> {{ job.company }}</p>
+        <p><strong>Location:</strong> {{ job.location }}</p>
+        <p><strong>Salary:</strong> {{ job.salary }}</p>
+        <p><strong>Posted on:</strong> {{ job.created_at }}</p>
+    </div>
+
+    <div class="applications-list">
+        {% for application in applications %}
+            <div class="application-card">
+                <div class="applicant-info">
+                    <h4>{{ application.user_name }}</h4>
+                    <p>{{ application.user_email }}</p>
+                    <p><small>Applied on: {{ application.applied_at }}</small></p>
+                </div>
+                
+                <div class="application-documents">
+                    <a href="{{ application.resume }}" class="btn btn-secondary" target="_blank">View Resume</a>
+                    {% if application.cover_letter %}
+                        <button class="btn btn-secondary" onclick="showCoverLetter('{{ application.cover_letter }}')">
+                            View Cover Letter
+                        </button>
+                    {% endif %}
+                </div>
+                
+                <div class="application-status">
+                    <select class="status-select" 
+                            onchange="updateStatus({{ application.id }}, this.value)"
+                            data-application-id="{{ application.id }}">
+                        <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accept</option>
+                        <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Reject</option>
+                    </select>
+                </div>
+            </div>
+        {% else %}
+            <p>No applications received yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function updateStatus(applicationId, status) {
+    fetch(`/update-application-status/${applicationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `status=${status}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Status updated successfully');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating status');
+    });
+}
+
+function showCoverLetter(coverLetter) {
+    alert(coverLetter); // In production, use a modal instead
+}
+</script>
+{% endblock %} 
